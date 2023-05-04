@@ -1,4 +1,4 @@
-function [T_opt,uk_opt] = VSAOptimizer(delta_q,U_max,M_link,M_rotor,M_oper,K_cov,N,uk_bounds,HIC_max)
+function [T_opt,uk_opt,q_link,dq_link,ddq_link] = VSAOptimizer(delta_q,U_max,M_link,M_rotor,M_oper,K_cov,N,uk_bounds,HIC_max)
 
 % variables:
 % - T
