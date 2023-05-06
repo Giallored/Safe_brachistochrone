@@ -1,5 +1,4 @@
-function [T_opt,uk_opt,u_opt,q_rotor,dq_rotor,ddq_rotor] = VSAOptimizer(q0,q1, ...
-    U_max,M_link,M_rotor,M_oper,K_cov,N,uk_bounds,HIC_max)
+function [T_opt,uk_opt,u_opt,q_rotor,dq_rotor,ddq_rotor] = VSAOptimizer(q0,q1,U_max,M_link,M_rotor,M_oper,K_cov,N,uk_bounds,HIC_max)
 
 % variables:
 % - T
@@ -13,6 +12,7 @@ function [T_opt,uk_opt,u_opt,q_rotor,dq_rotor,ddq_rotor] = VSAOptimizer(q0,q1, .
 
 N_vars = 1+5*N; %number of variables 
 
+delta_q = q1-q0;
 A=[];
 b=[];
 Aeq=[];
@@ -20,21 +20,40 @@ beq=[];
 lb = -ones(1,N_vars)*inf;
 ub = ones(1,N_vars)*inf;
 
+
+% Use the equality constraints to impose initial and final values of the
+% q_rot (6)
+% Aeq = zeros(N_vars,6);
+% beq = zeros(1,6);
+% i_q_rotor_0=2*N+2;
+% i_q_rotor_f=3*N+1;
+% i_dq_rotor_0=3*N+2;
+% i_dq_rotor_f=4*N+1;
+% i_ddq_rotor_0=4*N+2;
+% i_ddq_rotor_f=5*N+1;
+% Aeq(i_q_rotor_0,1)=1;
+% Aeq(i_q_rotor_f,1)=1;
+% Aeq(i_dq_rotor_0,1)=1;
+% Aeq(i_dq_rotor_f,1)=1;
+% Aeq(i_ddq_rotor_0,1)=1;
+% Aeq(i_ddq_rotor_f,1)=1;
+% Aeq=Aeq';
+% beq(1,1)=q0;
+% beq(1,6)=q1;
+
 % Boundaries
 lb(1)=0; %time bounds
-%ub(1)=5; %time bounds
-lb(2:N+1)=uk_bounds(1);
-ub(2:N+1)=uk_bounds(2);
-lb(N+2:2*N+1)=-U_max;
-ub(N+2:2*N+1)=U_max;
+lb(:,2:N+1)=uk_bounds(1);
+ub(:,2:N+1)=uk_bounds(2);
+lb(:,N+2:2*N+1)=-U_max;
+ub(:,N+2:2*N+1)=U_max;
 
 %initial conditions
 var0 = zeros(1,N_vars);
 var0(1) = 10; %time
 
-uk_init = uk_bounds(2);
 objfun = @(var) var(1);
-nonlcon = @(var) constraints(var,N,q0,q1,M_rotor,M_link,M_oper,K_cov,HIC_max,uk_init);
+nonlcon = @(var) constraints(var,N,q0,q1,M_rotor,M_link,M_oper,K_cov,HIC_max);
 
 optimization = optimset('LargeScale', 'off', 'Diagnostic', 'on', 'MaxFunEvals', 100000, ...
 'MaxIter', 10000, 'TolX', 1E-6);
@@ -51,7 +70,7 @@ ddq_rotor = varOpt(4*N+2:5*N+1);
 
 end
 
-function [c,ceq] = constraints(var,N,q0,q1,M_rotor,M_link,M_oper,K_cov,HIC_max,uk_max)
+function [c,ceq] = constraints(var,N,q0,q1,M_rotor,M_link,M_oper,K_cov,HIC_max)
 
     % get the different opt. variables
     T = var(1);
@@ -72,7 +91,10 @@ function [c,ceq] = constraints(var,N,q0,q1,M_rotor,M_link,M_oper,K_cov,HIC_max,u
         s=i/N;
         [q_link(1,i),dq_link(1,i),ddq_link(1,i)] = quintic_poli(s,q0,q1,T);
     end
-   
+    q_link(1,1)
+    dq_link = zeros(1,1)
+    ddq_link = zeros(1,1)
+
 
     %Interconnect the kinematics of the rotor trajectory using euler integ.
     for i=1:N-1
@@ -83,17 +105,14 @@ function [c,ceq] = constraints(var,N,q0,q1,M_rotor,M_link,M_oper,K_cov,HIC_max,u
 
     end
     
-    ceq_init(1,1) = q_rotor(1)-q_link(1,1);
-    ceq_init(1,2) = q_rotor(N)-q_link(1,N);
-    ceq_init(1,3) = dq_rotor(1)-dq_link(1,1);
-    ceq_init(1,4) = dq_rotor(N)-dq_link(1,N);  
-    ceq_init(1,5) = ddq_rotor(1)-ddq_link(1,1);
-    ceq_init(1,6) = ddq_rotor(N)-ddq_link(1,N);  
-    ceq_init(1,7) = uk(1)-uk_max;  
-    ceq_init(1,8) = uk(2)-uk_max;  
+    ceq_init_rotor(1,1) = q_rotor(1)-q0;
+    ceq_init_rotor(1,2) = q_rotor(N)-q1;
+    ceq_init_rotor(1,3) = dq_rotor(1);
+    ceq_init_rotor(1,4) = dq_rotor(N);  
+    ceq_init_rotor(1,5) = ddq_rotor(1);
+    ceq_init_rotor(1,6) = ddq_rotor(N);  
 
-
-    gamma=3000;
+    gamma=1;
     for i=1:N
         %Every instant, q_link>=q_rotor
         c_q(1,i) = q_rotor(1,i)-q_link(1,i);
@@ -110,7 +129,7 @@ function [c,ceq] = constraints(var,N,q0,q1,M_rotor,M_link,M_oper,K_cov,HIC_max,u
         c_dq(1,i) = abs(dq_link(1,i))-v_safe_i;     
     end
 
-    c = [c_dq,ceq_init];
+    c = [c_q,c_dq];%,ceq_init_rotor];
     ceq = [ceq_q_rotor,ceq_dq_rotor,ceq_dynamics_motor,ceq_dynamics_link];
 
 
