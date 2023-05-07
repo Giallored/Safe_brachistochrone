@@ -5,13 +5,8 @@ function [T_opt,uk_opt,u_opt,q_rotor,dq_rotor,q_link,dq_link] = VSAOptimizer(q0,
 % - T
 % - uk_i  forall i=1,...,N: K_trasmission is an input
 % - u_act_i  forall i=1,...,N: motor input
-% - q_i  ...... : position on the rotor
-% - dq_i  ...... : velocity on the rotor
-% - ddq_i  ...... : acceleration on the rotor
-% resulting in var =
-% [T,uk_1,...,uk_N,q_1...,q_N,dq_1...,dq_N,ddq_1...,ddq_N]
 
-N_vars = 1+6*N; %number of variables 
+N_vars = 1+2*N; %number of variables 
 
 A=[];
 b=[];
@@ -22,7 +17,6 @@ ub = ones(1,N_vars)*inf;
 
 % Boundaries
 lb(1)=0; %time bounds
-%ub(1)=5; %time bounds
 lb(2:N+1)=uk_bounds(1);
 ub(2:N+1)=uk_bounds(2);
 lb(N+2:2*N+1)=-U_max;
@@ -32,7 +26,6 @@ ub(N+2:2*N+1)=U_max;
 var0 = zeros(1,N_vars);
 var0(1) = 10; %time
 
-uk_init = uk_bounds(2);
 objfun = @(var) var(1);
 nonlcon = @(var) constraints(var,N,q0,q1,M_rotor,M_link,M_oper,K_cov,HIC_max,gamma);
 
@@ -44,39 +37,25 @@ optimization = optimset('LargeScale', 'off', 'Diagnostic', 'on', 'MaxFunEvals', 
 T_opt =   varOpt(1);
 uk_opt =   varOpt(2:N+1);
 u_opt = varOpt(N+2:2*N+1);
-q_rotor = varOpt(2*N+2:3*N+1);
-dq_rotor = varOpt(3*N+2:4*N+1);
-q_link = varOpt(4*N+2:5*N+1);
-dq_link = varOpt(5*N+2:6*N+1);
+
 
 fprintf('Resulting dT = %f\n', T_opt/N)
 
 end
 
-function [c,ceq] = constraints(var,N,q0,q1,M_rotor,M_link,M_oper,K_cov,HIC_max,gamma)
+function [c,ceq] = (var,N,q0,q1,M_rotor,M_link,M_oper,K_cov,HIC_max,gamma)
 
     % get the different opt. variables
     T = var(1);
     uk = var(2:N+1);
     u_act = var(N+2:2*N+1);
-    q_rotor = var(2*N+2:3*N+1);
-    dq_rotor = var(3*N+2:4*N+1);
-    q_link = var(4*N+2:5*N+1);
-    dq_link = var(5*N+2:6*N+1);
 
     % get the parameters
     dt =T/N;
 
-    % init/terminal conditions
-    ceq_init(1,1) = q_rotor(1)-q0;
-    ceq_init(1,2) = q_rotor(N)-q1;
-    ceq_init(1,3) = dq_rotor(1);
-    ceq_init(1,4) = dq_rotor(N); 
-    ceq_init(1,5) = q_link(1)-q0;
-    ceq_init(1,6) = q_link(N)-q1;
-    ceq_init(1,7) = dq_link(1);
-    ceq_init(1,8) = dq_link(N); 
-
+    % init/terminal conditions 
+    ceq_init(1,1) = u_act(1);
+    ceq_init(1,2) = u_act(N);
   
     %find accelerations from dynamics
     ddq_rotor = zeros(1,N);
