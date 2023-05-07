@@ -15,11 +15,10 @@ A=[];
 b=[];
 Aeq=[];
 beq=[];
-
-
-% Boundaries
 lb = -ones(1,N_vars)*inf;
 ub = ones(1,N_vars)*inf;
+
+% Boundaries
 lb(1)=0; %time bounds
 lb(2:N+1)=uk_bounds(1);
 ub(2:N+1)=uk_bounds(2);
@@ -71,30 +70,28 @@ function [c,ceq] = constraints(var,N,q0,q1,M_rotor,M_link,M_oper,K_cov,HIC_max,g
     dx = zeros(4,N); %dx(0)=(0,0,0,0)
     x(1,1)=q0;
     x(2,1)=q0;
-    
-    x(1,N)=q1;
-    x(2,N)=q1;
-
     for i=2:N-1
         dx(1,i) = x(3,i); % rotor velocity
         dx(2,i) = x(4,i); % link velocity
         dx(3,i) = (u_act(i)-uk(i)*(x(1,i) - x(2,i)))/M_rotor; % rotor acc
         dx(4,i) = uk(i)*(x(1,i) - x(2,i))/M_link; % link acc
 
-        x(:,i+1) = x(:,i)+dt.*dx(:,i); %Euler integration
+        x(:,i+1) = x(:,i)+dt.*dx(:,i);
     end
     
+    x(1,N)=q1;
+    x(2,N)=q1;
      
      % Def. Constraint
+     c_dq_low = Z
     for i=1:N
         M_rob_i = M_link + uk(i)/(uk(i)+gamma)*M_rotor;
         v_safe_i = get_v_from_HIC(HIC_max, M_rob_i,M_oper,K_cov);
         v = x(4,i);
-%         c_dq_low(1,i) = -v -v_safe_i;     
-%         c_dq_high(1,i) = v -v_safe_i;
-        c_dq(1,i) = abs(v) -v_safe_i;
+        c_dq_low(1,i) = -v -v_safe_i;     
+        c_dq_high(1,i) = v -v_safe_i;
     end 
-    c = [c_dq];%_low,c_dq_high];
+    c = [c_dq_low,c_dq_high];
     ceq = ceq_init;
 
 
