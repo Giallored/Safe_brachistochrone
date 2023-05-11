@@ -2,15 +2,15 @@ clear all;
 
 disp('Initializing...')
 
-M_rotor = 5; %[kg*m^2]rotor inertia
-M_link = 1; %[kg*m^2] link inertia
+M_rotor = 1.2; %[kg*m^2]rotor inertia
+M_link = 0.1; %[kg*m^2] link inertia
 K_tras = 1; % K trasmission is initialized very stiff
 
-M_oper = 10; % operator inertia
+M_oper = 1.2; % operator inertia
 K_cov = 0.1; %stiffness of the coverage
-U_max = 10; % torque max
+U_max = 100; % torque max
 
-HIC_max = 20;
+HIC_max = 15;
 uk_mean = 0.2;
 duk = 0.8;
 gamma = 3000;

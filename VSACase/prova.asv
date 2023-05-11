@@ -1,0 +1,39 @@
+init;
+syms T real
+N=10;
+u_k = sym("u_k",[1,N]); assume(u_k,"real");
+u_act = sym("u_act",[1,N]); assume(u_act,"real");
+
+
+q0=0;
+q1=1;
+dt =T/N;
+
+% x = zeros(4,N);  %x(0)=(0,0,0,0)
+% dx = zeros(4,N); %dx(0)=(0,0,0,0)
+x(1,1)=q0;
+x(2,1)=q0;
+x(3,1)=0;
+x(4,1)=0;
+
+x(1,N)=q1;
+x(2,N)=q1;
+
+for i=2:N-1
+    a_act_i = u_act(1,i);
+    a_k_i = u_k(1,i);
+
+    ciccio =  (a_act_i-a_k_i*(x(1,i) - x(2,i)))/M_rotor
+
+    dx_1 = x(3,i); % rotor velocity
+    dx_2= x(4,i); % link velocity
+    dx_3 = (a_act_i-a_k_i*(x(1,i) - x(2,i)))/M_rotor; % rotor acc
+    dx4,i) = a_k_i*(x(1,i) - x(2,i))/M_link; % link acc
+    dx_i = [dx_1,dx_2,dx_3,dx_4];
+    x(:,i+1) = x(:,i)+dt.*dx(:,i); %Euler integration
+end
+
+disp(x)
+
+
+

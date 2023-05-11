@@ -1,0 +1,135 @@
+init;
+
+addpath("C:\Users\Adriano\Documents\AI & robotics\Elective\Elective_Deluca\Safe_brachistochrone\utils")
+addpath("C:\Users\Adriano\Documents\AI & robotics\Elective\Elective_Deluca\Safe_brachistochrone\VSAcase")
+addpath("C:\Users\Adriano\Documents\AI & robotics\Elective\Elective_Deluca\Safe_brachistochrone\rigidCase")
+
+N=20;
+
+q0 = 0;
+q1 = 1;
+
+fprintf(['\nParameters of interest:\n - HIC_max = %d\n - U_max = %d\n' ...
+    ' - [q0,q1] = [%f,%f]\n - Problem scale = %i\n - N = %i\n' ...
+    '*********************************\n'], ...
+    HIC_max,U_max,q0,q1,scale,N)
+
+coreRigid;
+
+coreVSA;
+
+if T_rigid>T_VSA
+    T_max = T_rigid*1.1;
+else
+    T_max = T_VSA*1.1;
+end
+
+fprintf('CHECK for violations....')
+violations_t = [];  
+for i=1:N
+    if abs(dx_VSA(2,:))>v_safe_VSA(i)
+        violations_t = [violations_t timesteps(t)]
+    end
+end
+
+n_violations = size(violations_t,2);
+
+if n_violations == 0
+    fprintf('NO violations!\n')
+else
+    fprintf('%i violations at times:\n',n_violations)
+    for i=1:n_violations
+        fprintf(' - %f\n',violations_t(i))
+    end
+end
+
+figure; %POSITION plot
+subplot(2,1,1)
+plot(timesteps_rigid,x_rigid(1,:),'r-');
+grid; title('Position (rigid)');
+xlabel('t[s]');ylabel('p[m]');
+xlim([-0.1,T_max])
+legend('link');
+
+subplot(2,1,2)
+plot(timesteps_VSA,x_VSA(1:2,:));
+grid; title('Position (VSA)');
+xlabel('t[s]');ylabel('p[m]');
+xlim([-0.1,T_max])
+legend('rotor','link');
+
+figure; %VELOCITY plot
+subplot(2,1,1)
+plot(timesteps_rigid,dx_rigid(1,:),'r-',timesteps_rigid,v_safe_rigid,'g.');
+grid; title('Velocity (rigid)');
+xlabel('t[s]');ylabel('v[m/s]');
+xlim([-0.1,T_max]);
+legend('link');
+
+subplot(2,1,2)
+plot(timesteps_VSA,dx_VSA(1:2,:),timesteps_VSA,v_safe_VSA,'g.');
+grid; title('Velocity (VSA)');
+xlabel('t[s]');ylabel('v[m/s]');
+xlim([-0.1,T_max])
+legend('rotor','link','v_{safe}');
+
+figure; %ACCELERATION plot
+subplot(2,1,1)
+plot(timesteps_rigid,dx_rigid(2,:),'r-');
+grid; title('Acceleration (rigid)');
+xlabel('t[s]');ylabel('a[m/s^2]');
+xlim([-0.1,T_max]);
+legend('link');
+
+subplot(2,1,2)
+plot(timesteps_VSA,dx_VSA(3:4,:));
+grid; title('Acceleration (VSA)');
+xlabel('t[s]');ylabel('a[m/s^2]');
+xlim([-0.1,T_max])
+legend('rotor','link');
+
+
+figure; %ACCELERATION plot
+subplot(2,1,1)
+plot(timesteps_rigid,HIC_rigid,timesteps_rigid,HIC_max,'g-');
+grid; title('HIC (rigid)');
+xlabel('t[s]');ylabel('HIC');
+xlim([-0.1,T_max]);
+legend('link');
+
+subplot(2,1,2)
+plot(timesteps_VSA,HIC_VSA,timesteps_rigid,HIC_max,'g-');
+grid; title('Acceleration (VSA)');
+xlabel('t[s]');ylabel('a[m/s^2]');
+xlim([-0.1,T_max])
+legend('rotor','link');
+
+figure; %INPUTS plot
+subplot(3,1,1)
+plot(timesteps_rigid,u_rigid);
+grid; title('Inputs (rigid)');
+xlabel('t[s]');ylabel('u[kg m/s^2]');
+xlim([-0.1,T_max]);
+legend('motor');
+
+subplot(3,1,2)
+plot(timesteps_VSA,u_VSA);
+grid; title('Inputs (VSA)');
+xlabel('t[s]');ylabel('u[kg m/s^2]');
+xlim([-0.1,T_max])
+legend('motor');
+
+subplot(3,1,3)
+plot(timesteps_VSA,uk_VSA,'r-');
+grid; title('Stiff (VSA)');
+xlabel('t[s]');ylabel('k');
+xlim([-0.1,T_max])
+legend('stiff');
+
+user_in = input('Close all graphs?("n"for NO)');
+if user_in =='n'
+    disp('NOT closing the graphs.')
+else
+    close all force
+    disp('Closing the graphs.')
+end
