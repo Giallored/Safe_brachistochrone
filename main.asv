@@ -1,18 +1,18 @@
 init;
 
-addpath("C:\Users\Adriano\Documents\AI & robotics\Elective\Elective_Deluca\Safe_brachistochrone\utils")
-addpath("C:\Users\Adriano\Documents\AI & robotics\Elective\Elective_Deluca\Safe_brachistochrone\VSAcase")
-addpath("C:\Users\Adriano\Documents\AI & robotics\Elective\Elective_Deluca\Safe_brachistochrone\rigidCase")
+addpath("utils")
+addpath("VSAcase")
+addpath("rigidCase")
 
-N=20;
+N=50;
 
 q0 = 0;
 q1 = 1;
 
 fprintf(['\nParameters of interest:\n - HIC_max = %d\n - U_max = %d\n' ...
-    ' - [q0,q1] = [%f,%f]\n - Problem scale = %i\n - N = %i\n' ...
+    ' - u_k bounds = [%f,%f]\n - [q0,q1] = [%f,%f]\n - Problem scale = %i\n - N = %i\n' ...
     '*********************************\n'], ...
-    HIC_max,U_max,q0,q1,scale,N)
+    HIC_max,U_max,u_k_bounds,q0,q1,scale,N)
 
 coreRigid;
 
@@ -28,7 +28,7 @@ fprintf('CHECK for violations....')
 violations_t = [];  
 for i=1:N
     if abs(dx_VSA(2,:))>v_safe_VSA(i)
-        violations_t = [violations_t timesteps(t)]
+        violations_t = [violations_t timesteps(t)];
     end
 end
 
@@ -94,15 +94,18 @@ subplot(2,1,1)
 plot(timesteps_rigid,HIC_rigid,timesteps_rigid,HIC_max,'g-');
 grid; title('HIC (rigid)');
 xlabel('t[s]');ylabel('HIC');
+xlim([-1,HIC_max+1])
 xlim([-0.1,T_max]);
-legend('link');
+legend('HIC(t)','HIC_{max}');
 
 subplot(2,1,2)
-plot(timesteps_VSA,HIC_VSA,timesteps_rigid,HIC_max,'g-');
-grid; title('Acceleration (VSA)');
+plot(timesteps_VSA,HIC_VSA,timesteps_rigid,HIC_max,'g.');
+grid; title('HIC (VSA)');
+xlim([-1,HIC_max+1])
+
 xlabel('t[s]');ylabel('a[m/s^2]');
 xlim([-0.1,T_max])
-legend('rotor','link');
+legend('HIC(t)','HIC_{max}');
 
 figure; %INPUTS plot
 subplot(3,1,1)
@@ -126,8 +129,10 @@ xlabel('t[s]');ylabel('k');
 xlim([-0.1,T_max])
 legend('stiff');
 
-user_in = input('Close all graphs?("n"for NO)');
-if user_in =='n'
+fprinf('The final out')
+
+user_in = input('Close all graphs?(0 for NO) -> ');
+if user_in ==0
     disp('NOT closing the graphs.')
 else
     close all force

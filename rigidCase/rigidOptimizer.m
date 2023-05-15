@@ -30,7 +30,7 @@ var0(2:N+1)=0.4;
 objfun = @(var) var(1);
 nonlcon = @(var) constraints(var,N,q0,q1,M_rob,v_safe);
 
-optimization_parms = optimset(  'MaxFunEvals', 100000, ...
+optimization_parms = optimset(  'MaxFunEvals', 1000000, ...
 'MaxIter', 10000, 'TolX', 1E-6);%,'Diagnostic', 'on');
 
 [varOpt,fvalue] = fmincon(objfun,var0,A,b,Aeq,beq,lb,ub,nonlcon,optimization_parms);

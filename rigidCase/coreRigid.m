@@ -7,7 +7,8 @@ v_safe_rigid = get_v_from_HIC(HIC_max,M_rob, M_oper, K_cov);
 [T_rigid,u_rigid] = RigidOptimizer(q0,q1,U_max,N,M_rob,v_safe_rigid);
 
 dt_rigid = T_rigid/N;
-fprintf('\nResults (rigid):\n - T = %i\n - dt = %i\n----------\n',T_rigid,dt_rigid)
+fprintf(['\nResults (rigid):\n - T = %i\n - dt = %i\n - v safe = %f\n' ...
+    '----------\n'],T_rigid,dt_rigid,v_safe_rigid)
 
 
 %Get trajectory in time from u_rigid 

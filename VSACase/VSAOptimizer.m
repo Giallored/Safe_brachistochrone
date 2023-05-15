@@ -32,7 +32,7 @@ var0(N+2:2*N+1)=u_rigid;
 objfun = @(var) var(1);
 nonlcon = @(var) constraints(var,N,q0,q1,M_rotor,M_link,M_oper,K_cov,HIC_max,gamma);
 
-optimization_parms = optimset(  'MaxFunEvals', 100000, ...
+optimization_parms = optimset(  'MaxFunEvals', 1000000, ...
 'MaxIter', 10000, 'TolX', 1E-6);%,'Diagnostic', 'on');
 
 [varOpt,fvalue] = fmincon(objfun,var0,A,b,Aeq,beq,lb,ub,nonlcon,optimization_parms);
@@ -100,7 +100,7 @@ function [c,ceq] = constraints(var,N,q0,q1,M_rotor,M_link,M_oper,K_cov,HIC_max,g
     end 
     
     % init/terminal conditions 
-    ceq_init(1,1) =0;%x(1,N)-q1;
+    ceq_init(1,1) =x(1,N)-q1;
     ceq_init(1,2) = x(2,N)-q1;
     ceq_init(1,3) = x(3,N);
     ceq_init(1,4) =x(4,N);
@@ -113,9 +113,12 @@ function [c,ceq] = constraints(var,N,q0,q1,M_rotor,M_link,M_oper,K_cov,HIC_max,g
         v_safe_i = get_v_from_HIC(HIC_max, M_rob_i,M_oper,K_cov);
         
         c_dq(1,i) = abs(dx(2,i)) -v_safe_i;
+
+        % fixing stiffness
+        %ceq_k(1,i) = u_k(i) - 1e5;
     end 
     c =c_dq;
-    ceq = ceq_init;
+    ceq =ceq_init;% [ceq_k,ceq_init];
 end
 
 
