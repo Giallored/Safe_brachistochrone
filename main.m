@@ -103,7 +103,7 @@ plot(timesteps_VSA,HIC_VSA,timesteps_rigid,HIC_max,'g.');
 grid; title('HIC (VSA)');
 xlim([-1,HIC_max+1])
 
-xlabel('t[s]');ylabel('a[m/s^2]');
+xlabel('t[s]');ylabel('HIC');
 xlim([-0.1,T_max])
 legend('HIC(t)','HIC_{max}');
 

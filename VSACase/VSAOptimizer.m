@@ -108,7 +108,7 @@ function [c,ceq] = constraints(var,N,q0,q1,M_rotor,M_link,M_oper,K_cov,HIC_max,g
      % Def. Constraint
     for i=1:N
         %contraints on link velocity to be safe
-        M_rob_i =  get_M_rob(u_k(i),M_link,M_rotor,gamma);
+        M_rob_i =  get_M_rob(u_k(i),M_link,M_rotor,x(:,i),gamma);
          
         v_safe_i = get_v_from_HIC(HIC_max, M_rob_i,M_oper,K_cov);
         

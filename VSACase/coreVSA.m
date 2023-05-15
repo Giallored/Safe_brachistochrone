@@ -28,7 +28,7 @@ v_safe_VSA = zeros(1,N);
 HIC_VSA= zeros(1,N); 
 
 for i=1:N
-    M_rob = get_M_rob(uk_VSA(i),M_link,M_rotor,gamma);
+    M_rob = get_M_rob(uk_VSA(i),M_link,M_rotor,x_VSA(:,i),gamma);
     v_safe_VSA(:,i) = get_v_from_HIC(HIC_max,M_rob,M_oper,K_cov);
 
     HIC_VSA(:,i) = get_HIC_from_v(dx_VSA(2,i),M_rob,M_oper,K_cov);

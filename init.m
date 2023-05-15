@@ -13,8 +13,8 @@ while HIC_max <1
     HIC_max = input('HIC max (only pos numbers)? -> ');
 end
 
-u_k_mean =1e3;
-du_k = 0.8;
+u_k_mean =1e2;
+du_k = 0.9;
 gamma = 3e3;
 
 u_k_bounds = [(1-du_k)*u_k_mean,(1+du_k)*u_k_mean];
